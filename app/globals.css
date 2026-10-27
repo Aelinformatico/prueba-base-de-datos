@@ -2,6 +2,18 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+.field {
+  display: block;
+  margin-top: .35rem;
+  min-height: 2.4rem;
+  max-width: 100%;
+  border: 1px solid #dbe2e0;
+  border-radius: .55rem;
+  background: white;
+  padding: .45rem .6rem;
+  color: #0f172a;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
