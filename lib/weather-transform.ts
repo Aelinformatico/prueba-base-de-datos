@@ -1,5 +1,23 @@
 import type { RawCity, RejectedRow, WeatherRow } from "./etl.ts"
 
+function parseUtcHour(value: unknown): string | null {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)
+  )
+    return null
+
+  const timestamp = `${value}:00Z`
+  const milliseconds = Date.parse(timestamp)
+  if (!Number.isFinite(milliseconds)) return null
+
+  // Date.parse normalizes some invalid dates (for example, February 30).
+  // Round-tripping prevents those normalized values from entering the ETL.
+  return new Date(milliseconds).toISOString().slice(0, 16) === value
+    ? timestamp
+    : null
+}
+
 export function transform(raw: RawCity[]) {
   const transformed: WeatherRow[] = [],
     rejected: RejectedRow[] = [],
@@ -30,14 +48,10 @@ export function transform(raw: RawCity[]) {
         t = (temps as unknown[])[i],
         h = (humidity as unknown[])[i],
         p = (rain as unknown[])[i]
-      const iso =
-        typeof time === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(time)
-          ? `${time}:00Z`
-          : ""
+      const iso = parseUtcHour(time) ?? ""
       let reason = ""
       if (!city.ciudad) reason = "Ciudad ausente."
-      else if (!iso || !Number.isFinite(Date.parse(iso)))
-        reason = "Fecha/hora UTC no válida."
+      else if (!iso) reason = "Fecha/hora UTC no válida."
       else if (
         ![t, h, p].every((v) => typeof v === "number" && Number.isFinite(v))
       )

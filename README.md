@@ -4,9 +4,11 @@ Aplicación didáctica para extraer el histórico horario de Open-Meteo, transfo
 
 ## Puesta en marcha
 
-1. Copia `.env.example` a `.env.local` y completa las credenciales del proyecto Supabase. La clave `SUPABASE_SERVICE_ROLE_KEY` es secreta y solo se usa en rutas de servidor; nunca debe llevar el prefijo `NEXT_PUBLIC_`.
+1. Copia `.env.example` a `.env.local` y completa las credenciales del proyecto Supabase. `SUPABASE_SECRET_KEY` solo se usa en rutas de servidor; nunca debe llevar el prefijo `NEXT_PUBLIC_`. Para proyectos con claves antiguas también se acepta `SUPABASE_SERVICE_ROLE_KEY`.
 2. Ejecuta la migración `supabase/migrations/20261027000000_mediciones_meteorologicas.sql` en el SQL Editor de Supabase o con Supabase CLI.
 3. Ejecuta `npm run dev` y abre [http://localhost:3001](http://localhost:3001). El servidor de producción (`npm start`) también utiliza el puerto 3001.
+
+Para mostrar Google Maps, configura `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` y `NEXT_PUBLIC_GOOGLE_MAP_ID` en `.env.local`, habilita Maps JavaScript API en Google Cloud y restringe la clave a los dominios de la aplicación. La clave del navegador es visible en las peticiones; protégela con restricciones de sitio y API. Sin la clave, se mantiene la lista de temperaturas y el panel indica cómo habilitar el mapa.
 
 La migración activa RLS, revoca permisos directos de `anon` y `authenticated` y no añade políticas públicas. La lectura y escritura se hacen en servidor con la clave de servicio. El proyecto no tiene autenticación: el flujo se habilita para desarrollo local; antes de publicar, protege los endpoints con autenticación y controles de acceso.
 

@@ -14,6 +14,151 @@
   color: #0f172a;
 }
 
+.inspection-panel {
+  border: 15px solid #15803d;
+  background: rgb(199, 163, 96);
+  animation: inspection-border-color 6s linear infinite;
+}
+
+.inspection-options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 0 0 15%;
+  gap: 0.5rem;
+}
+
+.inspection-options > button {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.inspection-data-layout {
+  display: flex;
+  align-items: flex-start;
+}
+
+.informacion {
+  flex: 1 1 0%;
+  min-width: 0;
+  margin: 30px;
+}
+
+.original-data {
+  display: flex;
+  min-height: 50vh;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.original-data summary,
+.original-data pre {
+  font-size: 20px;
+}
+
+.transform-stat-card {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 10px solid #15803d;
+  background-color: rgb(254 249 195 / 100%);
+  text-align: center;
+  animation: inspection-border-color 6s linear infinite;
+}
+
+.transform-stat-card,
+.transform-stat-card small,
+.transform-stat-card b {
+  font-size: 30px;
+  color: red;
+}
+
+.transform-stat-card small {
+  width: 100%;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.transform-stat-card .selected-stat-label {
+  font-size: 26px;
+}
+
+.temperature-chart-title {
+  margin-left: 40px;
+  font-size: 30px;
+  text-align: center;
+}
+
+.temperature-chart-panel {
+  margin-top: 30px;
+}
+
+.temperature-chart-caption {
+  width: 100%;
+  margin-top: 30px;
+  font-size: 23px;
+  text-align: center;
+}
+
+.segunda_frase {
+  margin-top: 30px;
+  font-size: 23px;
+  text-align: left;
+}
+
+.temperature-chart-stats {
+  font-size: 23px;
+}
+
+.temperature-chart-legend {
+  font-size: 23px;
+}
+
+@media (min-width: 768px) {
+  .transform-stats {
+    width: calc(100% + 40px);
+    margin-inline: -20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .inspection-data-layout {
+    flex-direction: column;
+  }
+
+  .inspection-options {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .inspection-options > button {
+    width: 15%;
+  }
+}
+
+@keyframes inspection-border-color {
+  0%,
+  100% {
+    border-color: #15803d;
+  }
+  33% {
+    border-color: #2563eb;
+  }
+  66% {
+    border-color: #dc2626;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inspection-panel {
+    animation: none;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -134,7 +279,7 @@
     }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
     }

@@ -22,6 +22,9 @@ function validDate(v: unknown): v is string {
   const d = new Date(`${v}T00:00:00Z`)
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === v
 }
+function weatherKey(city: string, timestamp: string) {
+  return `${city}|${Date.parse(timestamp)}`
+}
 function period(a: unknown, b: unknown) {
   if (!validDate(a) || !validDate(b)) return "Indica fechas válidas."
   const days =
@@ -32,10 +35,11 @@ function period(a: unknown, b: unknown) {
 }
 function client() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const key =
+    process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key)
     throw new Error(
-      "Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local."
+      "Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SECRET_KEY en .env.local."
     )
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -164,7 +168,7 @@ async function post(request: Request, b: Body) {
         .select("ciudad,fecha_hora")
       if (error) return fail(`Supabase rechazó el lote: ${error.message}`, 502)
       const keys = new Set(
-        (data ?? []).map((r) => `${r.ciudad}|${r.fecha_hora}`)
+        (data ?? []).map((r) => weatherKey(r.ciudad, r.fecha_hora))
       )
       const { data: verified, error: verifyError } = await db
         .from("mediciones_meteorologicas")
@@ -183,10 +187,10 @@ async function post(request: Request, b: Body) {
           { status: 502 }
         )
       const found = new Set(
-        (verified ?? []).map((r) => `${r.ciudad}|${r.fecha_hora}`)
+        (verified ?? []).map((r) => weatherKey(r.ciudad, r.fecha_hora))
       )
       const missing = rows
-        .filter((r) => !found.has(`${r.ciudad}|${r.fecha_hora}`))
+        .filter((r) => !found.has(weatherKey(r.ciudad, r.fecha_hora)))
         .map((r) => `${r.ciudad} ${r.fecha_hora}`)
       return NextResponse.json({
         processed: data?.length ?? 0,
@@ -206,6 +210,16 @@ async function post(request: Request, b: Body) {
         page = Number(b.page ?? 0),
         size = Math.min(100, Math.max(1, Number(b.pageSize ?? 25)))
       if (!Number.isInteger(page) || page < 0) return fail("Página no válida.")
+      if (b.startDate !== undefined && !validDate(b.startDate))
+        return fail("Fecha inicial no valida.")
+      if (b.endDate !== undefined && !validDate(b.endDate))
+        return fail("Fecha final no valida.")
+      if (
+        validDate(b.startDate) &&
+        validDate(b.endDate) &&
+        b.startDate > b.endDate
+      )
+        return fail("La fecha inicial no puede ser posterior a la fecha final.")
       let q = db
         .from("mediciones_meteorologicas")
         .select(
@@ -216,8 +230,11 @@ async function post(request: Request, b: Body) {
         q = q.eq("ciudad", b.city)
       if (validDate(b.startDate))
         q = q.gte("fecha_hora", `${b.startDate}T00:00:00Z`)
-      if (validDate(b.endDate))
-        q = q.lte("fecha_hora", `${b.endDate}T23:59:59Z`)
+      if (validDate(b.endDate)) {
+        const dayAfterEnd = new Date(`${b.endDate}T00:00:00Z`)
+        dayAfterEnd.setUTCDate(dayAfterEnd.getUTCDate() + 1)
+        q = q.lt("fecha_hora", dayAfterEnd.toISOString())
+      }
       const sort = [
         "ciudad",
         "fecha_hora",

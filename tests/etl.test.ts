@@ -92,3 +92,42 @@ test("rechaza arrays con longitudes incoherentes", () => {
   assert.equal(result.transformed.length, 0)
   assert.match(result.rejected[0].motivo, /longitudes incoherentes/)
 })
+
+test("rechaza fechas de calendario imposibles aunque JavaScript pueda normalizarlas", () => {
+  const result = transform([
+    {
+      ciudad: "Valencia",
+      datos: {
+        hourly: {
+          time: ["2026-02-30T12:00"],
+          temperature_2m: [20],
+          relative_humidity_2m: [50],
+          precipitation: [0],
+        },
+      },
+    },
+  ])
+  assert.equal(result.transformed.length, 0)
+  assert.match(result.rejected[0].motivo, /Fecha\/hora UTC no válida/)
+})
+
+test("rechaza cadenas vacías y valores ausentes en las mediciones", () => {
+  const result = transform([
+    {
+      ciudad: "Barcelona",
+      datos: {
+        hourly: {
+          time: ["2026-09-01T00:00", "2026-09-01T01:00"],
+          temperature_2m: ["", undefined],
+          relative_humidity_2m: [50, 50],
+          precipitation: [0, 0],
+        },
+      },
+    },
+  ])
+  assert.equal(result.transformed.length, 0)
+  assert.equal(result.rejected.length, 2)
+  assert.ok(
+    result.rejected.every((row) => /medición numérica finita/.test(row.motivo))
+  )
+})
